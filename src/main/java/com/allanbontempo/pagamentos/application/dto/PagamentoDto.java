@@ -1,6 +1,6 @@
 package com.allanbontempo.pagamentos.application.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +12,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class PagamentoDto {
 
-    @NotNull(message = "O valor a ser pago não pode ser null")
+    @NotBlank(message = "O valor a ser pago não pode ser null")
     private BigDecimal valor;
 }
