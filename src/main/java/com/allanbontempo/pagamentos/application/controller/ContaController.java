@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +39,7 @@ public class ContaController {
             @ApiResponse(responseCode = "201", content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = ContaDto.class))})
     })
-    
+
     @PostMapping
     public ResponseEntity<ContaDto> criarConta(@Valid @RequestBody ContaDto contaDto) {
 
@@ -48,7 +49,7 @@ public class ContaController {
 
         Conta novaConta = contaService.save(contaDto.toConta());
         ContaDto dto = new ContaDto(novaConta);
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
 

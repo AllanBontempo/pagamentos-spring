@@ -3,6 +3,7 @@ package com.allanbontempo.pagamentos.application.dto;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
 import com.allanbontempo.pagamentos.domain.enums.Situacao;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,13 +18,13 @@ public class ContaDto {
     private Long id;
     @NotBlank(message = "Nome não pode ser null")
     private String nome;
-    @NotBlank(message = "Valor não pode ser null")
+    @NotNull(message = "Valor não pode ser null")
     private BigDecimal valor;
     @NotBlank(message = "Descrição não pode ser null")
     private String descricao;
     private String observacao;
     private LocalDate dataPagamento;
-    @NotBlank(message = "Data de vencimento não pode ser null")
+    @NotNull(message = "Data de vencimento não pode ser null")
     private LocalDate dataVencimento;
 
     private Situacao situacao;
