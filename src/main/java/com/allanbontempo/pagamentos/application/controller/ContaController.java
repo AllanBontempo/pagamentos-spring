@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 
 @RestController
@@ -63,11 +64,19 @@ public class ContaController {
     }
 
     @GetMapping("/total-pago")
-    public ResponseEntity<String> getTotalPago(@RequestParam String startDate, @RequestParam String endDate) {
-        LocalDate start = LocalDate.parse(startDate);
-        LocalDate end = LocalDate.parse(endDate);
+    public ResponseEntity<String> getTotalPago(@RequestParam String dataInicio, @RequestParam String dataFim) {
+        LocalDate start = LocalDate.parse(dataInicio);
+        LocalDate end = LocalDate.parse(dataFim);
         BigDecimal totalPago = contaService.getTotalPago(start, end);
         return ResponseEntity.ok("Total pago em contas: R$" + totalPago);
+    }
+
+    @GetMapping("/pendentes")
+    public ResponseEntity<List<ContaDto>> getContasPendentes(@RequestParam String dataInicio, @RequestParam String dataFim) {
+        LocalDate start = LocalDate.parse(dataInicio);
+        LocalDate end = LocalDate.parse(dataFim);
+        List<ContaDto> contas = contaService.getContasPendentes(start, end);
+        return ResponseEntity.ok(contas);
     }
 
     @DeleteMapping("/{id}")

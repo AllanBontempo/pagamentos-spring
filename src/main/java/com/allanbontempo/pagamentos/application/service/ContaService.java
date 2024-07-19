@@ -1,5 +1,6 @@
 package com.allanbontempo.pagamentos.application.service;
 
+import com.allanbontempo.pagamentos.application.dto.ContaDto;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
 import com.allanbontempo.pagamentos.domain.enums.Situacao;
 import com.allanbontempo.pagamentos.exception.ContaNotFoundException;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ContaService {
@@ -68,14 +70,24 @@ public class ContaService {
         return contaRepository.findById(id).orElseThrow(() -> new ContaNotFoundException("Conta não encontrada"));
     }
 
-    public BigDecimal getTotalPago(LocalDate startDate, LocalDate endDate) {
+    public BigDecimal getTotalPago(LocalDate dataInicio, LocalDate dataFim) {
         List<Conta> contas = contaRepository.findAll();
         return contas.stream()
                 .filter(conta -> conta.getDataPagamento() != null)
                 .filter(conta -> conta.getSituacao() == Situacao.PAGO)
-                .filter(conta -> !conta.getDataPagamento().isBefore(startDate) && !conta.getDataPagamento().isAfter(endDate))
+                .filter(conta -> !conta.getDataPagamento().isBefore(dataInicio) && !conta.getDataPagamento().isAfter(dataFim))
                 .map(Conta::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public List<ContaDto> getContasPendentes(LocalDate dataInicio, LocalDate dataFim) {
+        List<Conta> contas = contaRepository.findAll();
+        return contas.stream()
+                .filter(conta -> conta.getDataPagamento() == null)
+                .filter(conta -> conta.getSituacao() == Situacao.PENDENTE)
+                .filter(conta -> !conta.getDataVencimento().isBefore(dataInicio) && !conta.getDataVencimento().isAfter(dataFim))
+                .map(ContaDto::new)
+                .collect(Collectors.toList());
     }
 
 
