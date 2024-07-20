@@ -1,9 +1,11 @@
 package com.allanbontempo.pagamentos.application.controller;
 
 import com.allanbontempo.pagamentos.application.dto.ContaDto;
-import com.allanbontempo.pagamentos.application.dto.PagamentoDto;
+import com.allanbontempo.pagamentos.application.dto.MensagemDto;
 import com.allanbontempo.pagamentos.application.service.ContaService;
+import com.allanbontempo.pagamentos.application.service.UsuarioService;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
+import com.allanbontempo.pagamentos.domain.entities.Usuario;
 import com.allanbontempo.pagamentos.exception.NullParameterException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,6 +33,9 @@ public class ContaController {
 
     @Autowired
     private ContaService contaService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
 
     @Operation(summary = "Cria uma nova conta",
@@ -68,16 +73,16 @@ public class ContaController {
     }
 
 
-    @Operation(summary = "Atualiza um pagamento.",
+    @Operation(summary = "Realiza o pagamento de uma conta.",
             description = "É necessário passar o ID de uma conta e o valor para ser realizado o pagamento.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class))})
     })
-    @PutMapping("/{id}/pagamento")
-    public ResponseEntity<String> pagamento(@PathVariable Long id, @Valid @RequestBody PagamentoDto pagamentoDto) {
-        BigDecimal saldo = contaService.pagarConta(id, pagamentoDto.getValor());
-        return ResponseEntity.ok("Pagamento registrado com sucesso. Você possui um saldo de: R$" + saldo);
+    @GetMapping("/{id}/pagamento/usuario/{usuarioId}")
+    public ResponseEntity<MensagemDto> pagamento(@PathVariable Long id, @PathVariable Long usuarioId) {
+        BigDecimal saldo = contaService.pagarConta(id, usuarioId);
+        return ResponseEntity.ok(new MensagemDto("Pagamento registrado com sucesso. Você possui um saldo de: R$" + saldo));
     }
 
 
@@ -114,25 +119,41 @@ public class ContaController {
             @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class))})
     })
-    @GetMapping("/total-pago")
-    public ResponseEntity<String> getTotalPago(@RequestParam String dataInicio, @RequestParam String dataFim) {
+    @GetMapping("/usuario/{usuarioId}/total-pago")
+    public ResponseEntity<MensagemDto> getTotalPago(@RequestParam String dataInicio, @RequestParam String dataFim, @PathVariable Long usuarioId) {
         LocalDate start = LocalDate.parse(dataInicio);
         LocalDate end = LocalDate.parse(dataFim);
-        BigDecimal totalPago = contaService.getTotalPago(start, end);
-        return ResponseEntity.ok("Total pago em contas: R$" + totalPago);
+        Usuario usuario = usuarioService.findById(usuarioId);
+        BigDecimal totalPago = contaService.getTotalPago(start, end, usuario);
+
+        return ResponseEntity.ok(new MensagemDto("O usuário " + usuario.getNome() + " pagou um total em contas de: R$" + totalPago));
     }
 
     @Operation(summary = "Busca todas as contas pendentes.",
-            description = "Será feito uma busca de todas as contas pendentes e retornará ao usuário.")
+            description = "Será feito uma busca de todas as contas pendentes.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json",
                     schema = @Schema(type = "array", implementation = ContaDto.class))})
     })
     @GetMapping("/pendentes")
-    public ResponseEntity<List<ContaDto>> getContasPendentes(@RequestParam String dataInicio, @RequestParam String dataFim) {
+    public ResponseEntity<List<ContaDto>> getTodasContasPendentes(@RequestParam String dataInicio, @RequestParam String dataFim) {
         LocalDate start = LocalDate.parse(dataInicio);
         LocalDate end = LocalDate.parse(dataFim);
-        List<ContaDto> contas = contaService.getContasPendentes(start, end);
+        List<ContaDto> contas = contaService.getTodasContasPendentes(start, end);
+        return ResponseEntity.ok(contas);
+    }
+
+    @Operation(summary = "Busca todas as contas pendentes de um usuário.",
+            description = "Será feito uma busca de todas as contas pendentes de um usuário.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json",
+                    schema = @Schema(type = "array", implementation = ContaDto.class))})
+    })
+    @GetMapping("/usuario/{usuarioId}/pendentes")
+    public ResponseEntity<List<ContaDto>> getContasPendentesUsuario(@RequestParam String dataInicio, @RequestParam String dataFim, @PathVariable Long usuarioId) {
+        LocalDate start = LocalDate.parse(dataInicio);
+        LocalDate end = LocalDate.parse(dataFim);
+        List<ContaDto> contas = contaService.getContasPendentesUsuario(start, end, usuarioId);
         return ResponseEntity.ok(contas);
     }
 

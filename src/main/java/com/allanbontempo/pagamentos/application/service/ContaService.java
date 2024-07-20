@@ -4,8 +4,10 @@ import com.allanbontempo.pagamentos.application.dto.ContaDto;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
 import com.allanbontempo.pagamentos.domain.entities.Usuario;
 import com.allanbontempo.pagamentos.domain.enums.Situacao;
+import com.allanbontempo.pagamentos.exception.ContaJaPagaException;
 import com.allanbontempo.pagamentos.exception.NotFoundException;
-import com.allanbontempo.pagamentos.exception.ValorPagoInvalidoException;
+import com.allanbontempo.pagamentos.exception.SaldoInsuficienteException;
+import com.allanbontempo.pagamentos.exception.UsuarioSemPermissaoException;
 import com.allanbontempo.pagamentos.infrastructure.repository.ContaRepository;
 import com.allanbontempo.pagamentos.infrastructure.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
@@ -35,7 +37,7 @@ public class ContaService {
         }
 
         Usuario usuario = usuarioRepository.findById(conta.getUsuario().getId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         conta.setUsuario(usuario);
 
@@ -47,7 +49,7 @@ public class ContaService {
 
         Conta contaAntiga = contaRepository.findById(id).orElseThrow(() -> new NotFoundException("Conta não encontrada"));
         Usuario usuario = usuarioRepository.findById(conta.getUsuario().getId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
 
         if (conta.getSituacao() == null) {
@@ -61,12 +63,24 @@ public class ContaService {
     }
 
     @Transactional
-    public BigDecimal pagarConta(Long id, BigDecimal valor) {
+    public BigDecimal pagarConta(Long id, Long usuarioId) {
         Conta conta = contaRepository.findById(id).orElseThrow(() -> new NotFoundException("Conta não encontrada"));
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-        if (conta.getValor().compareTo(valor) > 0) {
-            throw new ValorPagoInvalidoException("O valor pago é menor que o valor da conta");
+        if (conta.getUsuario() != usuario) {
+            throw new UsuarioSemPermissaoException(usuario.getNome() + " não tem permissão para fazer o pagamento dessa conta.");
         }
+
+        if (conta.getValor().compareTo(usuario.getSaldo()) > 0) {
+            throw new SaldoInsuficienteException("O usuário não possui saldo suficiente.");
+        }
+
+        if (conta.getSituacao() == Situacao.PAGO) {
+            throw new ContaJaPagaException("Essa conta já foi paga.");
+        }
+
+        usuario.setSaldo(usuario.getSaldo().subtract(conta.getValor()));
 
         LocalDate hoje = LocalDate.now();
 
@@ -74,8 +88,9 @@ public class ContaService {
         conta.setSituacao(Situacao.PAGO);
 
         contaRepository.save(conta);
+        usuarioRepository.save(usuario);
 
-        return valor.subtract(conta.getValor());
+        return usuario.getSaldo();
     }
 
     public Page<Conta> findAll(Pageable pageable) {
@@ -86,9 +101,10 @@ public class ContaService {
         return contaRepository.findById(id).orElseThrow(() -> new NotFoundException("Conta não encontrada"));
     }
 
-    public BigDecimal getTotalPago(LocalDate dataInicio, LocalDate dataFim) {
+    public BigDecimal getTotalPago(LocalDate dataInicio, LocalDate dataFim, Usuario usuario) {
         List<Conta> contas = contaRepository.findAll();
         return contas.stream()
+                .filter(conta -> conta.getUsuario() == usuario)
                 .filter(conta -> conta.getDataPagamento() != null)
                 .filter(conta -> conta.getSituacao() == Situacao.PAGO)
                 .filter(conta -> !conta.getDataPagamento().isBefore(dataInicio) && !conta.getDataPagamento().isAfter(dataFim))
@@ -96,9 +112,24 @@ public class ContaService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public List<ContaDto> getContasPendentes(LocalDate dataInicio, LocalDate dataFim) {
+    public List<ContaDto> getTodasContasPendentes(LocalDate dataInicio, LocalDate dataFim) {
         List<Conta> contas = contaRepository.findAll();
         return contas.stream()
+                .filter(conta -> conta.getDataPagamento() == null)
+                .filter(conta -> conta.getSituacao() == Situacao.PENDENTE)
+                .filter(conta -> !conta.getDataVencimento().isBefore(dataInicio) && !conta.getDataVencimento().isAfter(dataFim))
+                .map(ContaDto::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<ContaDto> getContasPendentesUsuario(LocalDate dataInicio, LocalDate dataFim, Long usuarioId) {
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
+        List<Conta> contas = contaRepository.findAll();
+        return contas.stream()
+                .filter(conta -> conta.getUsuario() == usuario)
                 .filter(conta -> conta.getDataPagamento() == null)
                 .filter(conta -> conta.getSituacao() == Situacao.PENDENTE)
                 .filter(conta -> !conta.getDataVencimento().isBefore(dataInicio) && !conta.getDataVencimento().isAfter(dataFim))
@@ -117,7 +148,7 @@ public class ContaService {
 
     public List<ContaDto> findByUsuarioId(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         List<Conta> contas = contaRepository.findByUsuario(usuario);
         return contas.stream().map(ContaDto::new).collect(Collectors.toList());
