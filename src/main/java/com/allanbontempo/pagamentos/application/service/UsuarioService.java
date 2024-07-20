@@ -37,7 +37,7 @@ public class UsuarioService {
     }
 
     public Usuario findById(Long id) {
-        return usuarioRepository.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado."));
+        return usuarioRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Usuário com o id: %d não encontrado.", id)));
     }
 
     @Transactional

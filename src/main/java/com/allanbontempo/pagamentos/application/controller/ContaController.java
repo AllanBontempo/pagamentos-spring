@@ -3,11 +3,13 @@ package com.allanbontempo.pagamentos.application.controller;
 import com.allanbontempo.pagamentos.application.dto.ContaDto;
 import com.allanbontempo.pagamentos.application.dto.MensagemDto;
 import com.allanbontempo.pagamentos.application.service.ContaService;
+import com.allanbontempo.pagamentos.application.service.CsvContaService;
 import com.allanbontempo.pagamentos.application.service.UsuarioService;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
 import com.allanbontempo.pagamentos.domain.entities.Usuario;
 import com.allanbontempo.pagamentos.exception.NullParameterException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -36,6 +40,9 @@ public class ContaController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private CsvContaService csvContaService;
 
 
     @Operation(summary = "Cria uma nova conta",
@@ -177,6 +184,25 @@ public class ContaController {
     public ResponseEntity<List<ContaDto>> getContasByUsuarioId(@PathVariable Long usuarioId) {
         List<ContaDto> contas = contaService.findByUsuarioId(usuarioId);
         return ResponseEntity.ok(contas);
+    }
+
+    @Operation(summary = "Carrega arquivo CSV para criar contas", description = "Upload de um arquivo CSV para criar contas com status 'PENDENTE'")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Arquivo processado com sucesso e contas criadas"),
+            @ApiResponse(responseCode = "400", description = "Erro ao processar o arquivo")
+    })
+    @RequestMapping(
+            path = "/upload-csv",
+            method = RequestMethod.POST,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<String> uploadCsvFile(@Parameter(name = "file", required = true) @RequestPart("file") MultipartFile file) {
+        try {
+            csvContaService.importCsvFile(file);
+            return ResponseEntity.ok("Arquivo processado com sucesso e contas criadas.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao processar o arquivo: " + e.getMessage());
+        }
     }
 
 
