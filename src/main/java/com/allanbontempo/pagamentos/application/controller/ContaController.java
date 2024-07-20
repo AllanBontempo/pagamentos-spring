@@ -147,4 +147,16 @@ public class ContaController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Busca contas por ID do usuário", description = "Retorna todas as contas associadas a um usuário específico.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contas encontradas"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<ContaDto>> getContasByUsuarioId(@PathVariable Long usuarioId) {
+        List<ContaDto> contas = contaService.findByUsuarioId(usuarioId);
+        return ResponseEntity.ok(contas);
+    }
+
+
 }

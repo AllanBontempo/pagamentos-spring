@@ -2,10 +2,12 @@ package com.allanbontempo.pagamentos.application.service;
 
 import com.allanbontempo.pagamentos.application.dto.ContaDto;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
+import com.allanbontempo.pagamentos.domain.entities.Usuario;
 import com.allanbontempo.pagamentos.domain.enums.Situacao;
-import com.allanbontempo.pagamentos.exception.ContaNotFoundException;
+import com.allanbontempo.pagamentos.exception.NotFoundException;
 import com.allanbontempo.pagamentos.exception.ValorPagoInvalidoException;
 import com.allanbontempo.pagamentos.infrastructure.repository.ContaRepository;
+import com.allanbontempo.pagamentos.infrastructure.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,11 +24,20 @@ public class ContaService {
     @Autowired
     private ContaRepository contaRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     @Transactional
     public Conta save(Conta conta) {
+
         if (conta.getSituacao() == null) {
             conta.setSituacao(Situacao.PENDENTE);
         }
+
+        Usuario usuario = usuarioRepository.findById(conta.getUsuario().getId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        conta.setUsuario(usuario);
 
         return contaRepository.save(conta);
     }
@@ -34,19 +45,24 @@ public class ContaService {
     @Transactional
     public Conta update(Long id, Conta conta) {
 
-        Conta contaAntiga = contaRepository.findById(id).orElseThrow(() -> new ContaNotFoundException("Conta não encontrada"));
+        Conta contaAntiga = contaRepository.findById(id).orElseThrow(() -> new NotFoundException("Conta não encontrada"));
+        Usuario usuario = usuarioRepository.findById(conta.getUsuario().getId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
 
         if (conta.getSituacao() == null) {
             conta.setSituacao(contaAntiga.getSituacao());
         }
 
         conta.setId(id);
+        conta.setUsuario(usuario);
+
         return contaRepository.save(conta);
     }
 
     @Transactional
     public BigDecimal pagarConta(Long id, BigDecimal valor) {
-        Conta conta = contaRepository.findById(id).orElseThrow(() -> new ContaNotFoundException("Conta não encontrada"));
+        Conta conta = contaRepository.findById(id).orElseThrow(() -> new NotFoundException("Conta não encontrada"));
 
         if (conta.getValor().compareTo(valor) > 0) {
             throw new ValorPagoInvalidoException("O valor pago é menor que o valor da conta");
@@ -67,7 +83,7 @@ public class ContaService {
     }
 
     public Conta findById(Long id) {
-        return contaRepository.findById(id).orElseThrow(() -> new ContaNotFoundException("Conta não encontrada"));
+        return contaRepository.findById(id).orElseThrow(() -> new NotFoundException("Conta não encontrada"));
     }
 
     public BigDecimal getTotalPago(LocalDate dataInicio, LocalDate dataFim) {
@@ -94,8 +110,16 @@ public class ContaService {
     @Transactional
     public void delete(Long id) {
         if (!contaRepository.existsById(id)) {
-            throw new ContaNotFoundException("Conta não encontrada com ID: " + id);
+            throw new NotFoundException("Conta não encontrada com ID: " + id);
         }
         contaRepository.deleteById(id);
+    }
+
+    public List<ContaDto> findByUsuarioId(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        List<Conta> contas = contaRepository.findByUsuario(usuario);
+        return contas.stream().map(ContaDto::new).collect(Collectors.toList());
     }
 }

@@ -1,6 +1,7 @@
 package com.allanbontempo.pagamentos.application.dto;
 
 import com.allanbontempo.pagamentos.domain.entities.Conta;
+import com.allanbontempo.pagamentos.domain.entities.Usuario;
 import com.allanbontempo.pagamentos.domain.enums.Situacao;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,8 +27,9 @@ public class ContaDto {
     private LocalDate dataPagamento;
     @NotNull(message = "Data de vencimento não pode ser null")
     private LocalDate dataVencimento;
-
     private Situacao situacao;
+    @NotNull
+    private Long usuarioId;
 
     public ContaDto(Conta conta) {
         this.id = conta.getId();
@@ -38,6 +40,7 @@ public class ContaDto {
         this.dataPagamento = conta.getDataPagamento();
         this.dataVencimento = conta.getDataVencimento();
         this.situacao = conta.getSituacao();
+        this.usuarioId = conta.getUsuario().getId();
     }
 
     public Conta toConta() {
@@ -50,6 +53,12 @@ public class ContaDto {
         conta.setDataVencimento(this.dataVencimento);
         conta.setObservacao(this.observacao);
         conta.setSituacao(this.situacao);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(this.usuarioId);
+
+        conta.setUsuario(usuario);
+
         return conta;
     }
 }
