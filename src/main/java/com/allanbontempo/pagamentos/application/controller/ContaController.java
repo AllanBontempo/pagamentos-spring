@@ -34,16 +34,12 @@ import java.util.List;
 @RequestMapping("/contas")
 @Tag(name = "Contas")
 public class ContaController {
-
     @Autowired
     private ContaService contaService;
-
     @Autowired
     private UsuarioService usuarioService;
-
     @Autowired
     private CsvContaService csvContaService;
-
 
     @Operation(summary = "Cria uma nova conta",
             description = "Faz a criação de uma nova conta.")
@@ -203,6 +199,23 @@ public class ContaController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao processar o arquivo: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = "Obtém a lista de contas a pagar com filtro de data de vencimento e nome",
+            description = "Retorna a lista de contas a pagar filtrada por data de vencimento e nome.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json",
+                    schema = @Schema(type = "array", implementation = ContaDto.class))})
+    })
+    @GetMapping("/contas-filtro")
+    public ResponseEntity<Page<ContaDto>> listarContasFiltradas(
+            @RequestParam(required = false) LocalDate dataVencimento,
+            @RequestParam(required = false) String nome,
+            Pageable pageable) {
+
+        Page<Conta> contas = contaService.findByFilters(dataVencimento, nome, pageable);
+        Page<ContaDto> dtoPage = contas != null ? contas.map(ContaDto::new) : Page.empty(pageable);
+        return ResponseEntity.ok(dtoPage);
     }
 
 

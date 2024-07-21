@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,11 +30,16 @@ public class UsuarioServiceTest {
     @InjectMocks
     private UsuarioService usuarioService;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @Test
     void testSave() {
         Usuario usuario = new Usuario();
         usuario.setId(1L);
+        usuario.setSenha("1234");
 
+        when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encodedSenha123");
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 
         Usuario savedUsuario = usuarioService.save(usuario);
@@ -48,7 +54,9 @@ public class UsuarioServiceTest {
         Long id = 1L;
         Usuario usuario = new Usuario();
         usuario.setId(id);
+        usuario.setSenha("1234");
 
+        when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encodedSenha123");
         when(usuarioRepository.existsById(id)).thenReturn(true);
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 

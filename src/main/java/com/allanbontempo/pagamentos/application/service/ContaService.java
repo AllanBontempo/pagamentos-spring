@@ -153,4 +153,8 @@ public class ContaService {
         List<Conta> contas = contaRepository.findByUsuario(usuario);
         return contas.stream().map(ContaDto::new).collect(Collectors.toList());
     }
+
+    public Page<Conta> findByFilters(LocalDate data, String nome, Pageable pageable) {
+        return contaRepository.findByFilters(data, nome, pageable);
+    }
 }

@@ -22,11 +22,11 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -369,5 +369,23 @@ public class ContaServiceTest {
         assertEquals("Usuário não encontrado", exception.getMessage());
         verify(usuarioRepository).findById(usuarioId);
         verify(contaRepository, never()).findByUsuario(any());
+    }
+
+    @Test
+    void testFindByFilters() {
+        LocalDate data = LocalDate.of(2024, 7, 21);
+        String nome = "Teste";
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Conta conta = new Conta();
+        Page<Conta> contasPage = new PageImpl<>(Collections.singletonList(conta));
+
+        when(contaRepository.findByFilters(any(LocalDate.class), anyString(), any(Pageable.class))).thenReturn(contasPage);
+
+        Page<Conta> result = contaService.findByFilters(data, nome, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(conta, result.getContent().get(0));
     }
 }

@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -274,4 +276,29 @@ class ContaControllerTest {
         assertTrue(Objects.requireNonNull(response.getBody()).contains("Erro ao processar o arquivo: Falha no processamento"));
         verify(csvContaService).importCsvFile(file);
     }
+
+    @Test
+    void listarContasFiltradasTest() {
+        Pageable pageable = PageRequest.of(0, 10);
+        LocalDate dataVencimento = LocalDate.now();
+        String nome = "Teste";
+
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        Conta conta = new Conta();
+        conta.setUsuario(usuario);
+
+        Page<Conta> contasPage = new PageImpl<>(Collections.singletonList(conta));
+
+        when(contaService.findByFilters(any(LocalDate.class), anyString(), any(Pageable.class))).thenReturn(contasPage);
+
+        ResponseEntity<Page<ContaDto>> response = contaController.listarContasFiltradas(dataVencimento, nome, pageable);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().getTotalElements());
+
+        verify(contaService, times(1)).findByFilters(dataVencimento, nome, pageable);
+    }
+
 }

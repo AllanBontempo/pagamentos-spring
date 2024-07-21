@@ -1,10 +1,11 @@
 package com.allanbontempo.pagamentos.application.controller;
 
-import com.allanbontempo.pagamentos.application.dto.LoginRequest;
-import com.allanbontempo.pagamentos.application.dto.LoginResponse;
+import com.allanbontempo.pagamentos.application.dto.LoginRequestDto;
+import com.allanbontempo.pagamentos.application.dto.LoginResponseDto;
 import com.allanbontempo.pagamentos.application.dto.UsuarioDto;
 import com.allanbontempo.pagamentos.application.service.UsuarioService;
 import com.allanbontempo.pagamentos.domain.entities.Usuario;
+import com.allanbontempo.pagamentos.exception.CredenciaisInvalidasException;
 import com.allanbontempo.pagamentos.exception.NullParameterException;
 import com.allanbontempo.pagamentos.infrastructure.helpers.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -43,16 +45,26 @@ public class UsuarioController {
     @Autowired
     private JwtUtil jwtUtil;
 
+
+    @Operation(summary = "Realiza o login do usuário", description = "Autentica o usuário com email e senha, retornando um token JWT")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = LoginResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             final String jwt = jwtUtil.generateToken(loginRequest.getEmail());
-            return ResponseEntity.ok(new LoginResponse(jwt));
+            return ResponseEntity.ok(new LoginResponseDto(jwt));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
+            throw new CredenciaisInvalidasException("Credenciais inválidas");
         }
     }
 

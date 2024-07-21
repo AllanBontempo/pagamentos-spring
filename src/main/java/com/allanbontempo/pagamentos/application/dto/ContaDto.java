@@ -3,6 +3,7 @@ package com.allanbontempo.pagamentos.application.dto;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
 import com.allanbontempo.pagamentos.domain.entities.Usuario;
 import com.allanbontempo.pagamentos.domain.enums.Situacao;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ public class ContaDto {
     private String observacao;
     private LocalDate dataPagamento;
     @NotNull(message = "Data de vencimento não pode ser null")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataVencimento;
     private Situacao situacao;
     @NotNull
