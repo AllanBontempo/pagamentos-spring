@@ -1,7 +1,6 @@
 package com.allanbontempo.pagamentos.infrastructure.config;
 
 import com.allanbontempo.pagamentos.infrastructure.security.JwtRequestFilter;
-import com.allanbontempo.pagamentos.infrastructure.security.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -30,9 +29,10 @@ public class SecurityConfig {
         http
                 .csrf(crsf -> crsf.disable())
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll() // Torna o endpoint GET /contas público
-                        .requestMatchers("/usuarios/login").permitAll() // Torna o endpoint /login público
-                        .anyRequest().authenticated() // Todos os outros endpoints requerem autenticação
+                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
+                        .requestMatchers("/usuarios/login").permitAll()
+                        .anyRequest().authenticated()
                 ).sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
