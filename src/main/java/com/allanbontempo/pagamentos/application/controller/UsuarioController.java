@@ -1,10 +1,12 @@
 package com.allanbontempo.pagamentos.application.controller;
 
 import com.allanbontempo.pagamentos.application.dto.LoginRequest;
+import com.allanbontempo.pagamentos.application.dto.LoginResponse;
 import com.allanbontempo.pagamentos.application.dto.UsuarioDto;
 import com.allanbontempo.pagamentos.application.service.UsuarioService;
 import com.allanbontempo.pagamentos.domain.entities.Usuario;
 import com.allanbontempo.pagamentos.exception.NullParameterException;
+import com.allanbontempo.pagamentos.infrastructure.helpers.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,21 +40,19 @@ public class UsuarioController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            log.info("Tentando autenticação");
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.info("Autenticação bem-sucedida para o usuário: {}", loginRequest.getEmail());
-
-            // Retorne um token JWT ou outra resposta apropriada
-            return "Autenticado com sucesso!";
+            final String jwt = jwtUtil.generateToken(loginRequest.getEmail());
+            return ResponseEntity.ok(new LoginResponse(jwt));
         } catch (AuthenticationException e) {
-            log.error("Erro de autenticação: {}", e.getMessage());
-
-            throw new RuntimeException("Credenciais inválidas");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
         }
     }
 
