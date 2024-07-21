@@ -1,5 +1,6 @@
 package com.allanbontempo.pagamentos.application.controller;
 
+import com.allanbontempo.pagamentos.application.dto.LoginRequest;
 import com.allanbontempo.pagamentos.application.dto.UsuarioDto;
 import com.allanbontempo.pagamentos.application.service.UsuarioService;
 import com.allanbontempo.pagamentos.domain.entities.Usuario;
@@ -11,21 +12,49 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/usuarios")
 @Tag(name = "Usuários")
+@Slf4j
 public class UsuarioController {
+
 
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @PostMapping("/login")
+    public String login(@RequestBody LoginRequest loginRequest) {
+        try {
+            log.info("Tentando autenticação");
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.info("Autenticação bem-sucedida para o usuário: {}", loginRequest.getEmail());
+
+            // Retorne um token JWT ou outra resposta apropriada
+            return "Autenticado com sucesso!";
+        } catch (AuthenticationException e) {
+            log.error("Erro de autenticação: {}", e.getMessage());
+
+            throw new RuntimeException("Credenciais inválidas");
+        }
+    }
 
     @Operation(summary = "Cria um novo usuário",
             description = "Faz a criação de um novo usuário.")

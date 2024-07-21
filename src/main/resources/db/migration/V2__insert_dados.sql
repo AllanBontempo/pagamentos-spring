@@ -1,8 +1,11 @@
 -- Inserir dados de teste na tabela usuario
 INSERT INTO usuario (nome, email, senha, saldo)
-VALUES ('Allan Bontempo', 'allanbt@hotmail.com', 'senha123', 1000.00),
-       ('Maria Oliveira', 'maria.oliveira@example.com', 'senha123', 1500.00),
-       ('Pedro Santos', 'pedro.santos@example.com', 'senha123', 500.00);
+VALUES ('Allan Bontempo', 'allanbt@hotmail.com', '$2y$10$nhhwcC/rR8mQwEby41Zxh.1jDqWEhzn0kgO7sKu/0RBQoxiAaBcTS',
+        1000.00),
+       ('Maria Oliveira', 'maria.oliveira@example.com', '$2y$10$nhhwcC/rR8mQwEby41Zxh.1jDqWEhzn0kgO7sKu/0RBQoxiAaBcTS',
+        1500.00),
+       ('Pedro Santos', 'pedro.santos@example.com', '$2y$10$nhhwcC/rR8mQwEby41Zxh.1jDqWEhzn0kgO7sKu/0RBQoxiAaBcTS',
+        500.00);
 
 -- Inserir dados de teste na tabela conta
 INSERT INTO conta (nome, descricao, valor_original, data_vencimento, situacao, data_pagamento, observacao, usuario_id)
