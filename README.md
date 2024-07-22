@@ -31,7 +31,7 @@ O projeto segue a abordagem DDD (Domain Driven Design) para organização das pa
 
 ### Comandos para rodar o Docker Compose
 
-1. Compile e empacote a aplicação:
+1. Compile e empacote a aplicação (sem a execução de testes):
     ```bash
     ./mvnw clean package -DskipTests
     ```
@@ -51,6 +51,18 @@ O sistema rodará na porta `localhost:8080`.
 ### Acessando a Aplicação
 
 - Swagger UI: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+## Executando Testes
+
+Para executar os testes unitários, utilize o seguinte comando:
+
+```bash
+./mvnw test
+```
+
+---
+
+**OBS: É necessário estar com o docker rodando para executar os testes**
 
 ## Autenticação
 
@@ -100,16 +112,6 @@ Nome,Descricao,Valor,DataVencimento,UsuarioId
 ```
 
 Deixei um arquivo de exemplo em `resource/docs`.
-
-## Executando Testes
-
-Para executar os testes unitários, utilize o seguinte comando:
-
-```bash
-./mvnw test
-```
-
----
 
 ## Estrutura de Pastas
 
