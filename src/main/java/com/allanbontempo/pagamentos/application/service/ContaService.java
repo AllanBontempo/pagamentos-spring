@@ -32,6 +32,10 @@ public class ContaService {
     @Transactional
     public Conta save(Conta conta) {
 
+
+        conta.setDataVencimento(null);
+        conta.setSituacao(Situacao.PENDENTE);
+
         Usuario usuario = usuarioRepository.findById(conta.getUsuario().getId())
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 

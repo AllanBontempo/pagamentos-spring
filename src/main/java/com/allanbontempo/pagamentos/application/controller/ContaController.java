@@ -7,7 +7,6 @@ import com.allanbontempo.pagamentos.application.service.CsvContaService;
 import com.allanbontempo.pagamentos.application.service.UsuarioService;
 import com.allanbontempo.pagamentos.domain.entities.Conta;
 import com.allanbontempo.pagamentos.domain.entities.Usuario;
-import com.allanbontempo.pagamentos.domain.enums.Situacao;
 import com.allanbontempo.pagamentos.exception.NullParameterException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -55,9 +54,6 @@ public class ContaController {
         if (contaDto == null) {
             throw new NullParameterException("Conta não pode ser null");
         }
-
-        contaDto.setDataVencimento(null);
-        contaDto.setSituacao(Situacao.PENDENTE);
 
         Conta novaConta = contaService.save(contaDto.toConta());
         ContaDto dto = new ContaDto(novaConta);
