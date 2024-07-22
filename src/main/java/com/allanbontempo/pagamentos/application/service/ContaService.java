@@ -33,7 +33,7 @@ public class ContaService {
     public Conta save(Conta conta) {
 
 
-        conta.setDataVencimento(null);
+        conta.setDataPagamento(null);
         conta.setSituacao(Situacao.PENDENTE);
 
         Usuario usuario = usuarioRepository.findById(conta.getUsuario().getId())
