@@ -56,6 +56,18 @@ O sistema rodará na porta `localhost:8080`.
 
 Você precisará se autenticar no endpoint `/usuarios/login` e inserir o Bearer Token antes de consumir os endpoints.
 
+### Usuários para a autenticação:
+
+```
+ E-mail's:
+    - allanbt@hotmail.com;
+    - maria.oliveira@example.com;
+    - pedro.santos@example.com;
+    
+ Senha: 
+    - senha123;
+```
+
 ### Endpoints Públicos
 
 - `/usuarios/login`
