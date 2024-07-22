@@ -103,7 +103,7 @@ public class UsuarioController {
     }
 
 
-    @Operation(summary = "Obtém todas os usuários.", description = "Caso o JSON de paginação venha vazio o valor default é 20 por página.")
+    @Operation(summary = "Obtém todos os usuários.", description = "Caso o JSON de paginação venha vazio o valor default é 20 por página.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json",
                     schema = @Schema(type = "array", implementation = UsuarioDto.class))})

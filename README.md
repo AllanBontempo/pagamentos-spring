@@ -38,7 +38,7 @@ O projeto segue a abordagem DDD (Domain Driven Design) para organização das pa
 
 2. Construa a imagem Docker:
     ```bash
-    docker build -t pagamentos .
+    docker build -t allanbontempo/pagamentos .
     ```
 
 3. Suba os containers:
